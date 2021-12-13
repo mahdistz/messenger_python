@@ -33,6 +33,13 @@ class User:
         logger.info('an user was signed in program ')
         return "sign in a person into program"
 
+    def validation_password(self):
+        if self.password:
+            pass
 
-if __name__ == '__main__':
-    User()
+    def validation_username(self):
+        if self.username:
+            pass
+
+    def check_username_with_password(self):
+        pass
