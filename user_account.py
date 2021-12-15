@@ -104,6 +104,3 @@ class User:
 
     def __repr__(self):
         return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
-
-# print(User.login())
-print(User.get_users_info_list())
