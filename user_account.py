@@ -35,15 +35,26 @@ class User:
 
     def register(self):
         # for each user ,username and password must be saved in file.
-        # if his/her username not exist, he/she can sign up . >> logger.error !
+        # if his/her username not exist, he/she can sign up .
+        # information_list = [{'key':'value'},...]
+        my_file = file_handling.File('users.csv')
+        information_list = my_file.read_csvfile_as_dictionary()
+        usernames_list = []
+        for item in information_list:
+            usernames_list.append(item['username'])
 
-        logger.info(f" new person with username: {self.username},registered into program")
-        return f"an user with username {self.username} registered."
+        if self.username not in usernames_list:
+
+            info = {'username': self.username, 'password': User.hash_method(self.__password)}
+            file_handling.File('users.csv').write(info)
+            logger.info(f" new person with username: {self.username},registered into program")
+        else:
+            logging.warning("this username isn't available")
 
     def login(self):
         # if the username and password is correct,the user can sign in .
-        logger.info(f'an user with username {self.username} was signed in program ')
-        return f"sign in an person with username {self.username} into program"
+        logger.info('an user was signed in program ')
+        return "sign in a person into program"
 
     def validation_password(self):
         """   Password must be
