@@ -1,5 +1,4 @@
 import logging
-import file_handler_module
 import os
 
 
