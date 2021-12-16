@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(level=logging.INFO)
+stream_handler.setLevel(level=logging.WARNING)
 file_handler = logging.FileHandler('user.log')
 file_handler.setLevel(level=logging.INFO)
 
@@ -29,6 +29,9 @@ USERNAME_REGEX = compile(r'\A[\w\-\.]{3,12}\Z')
 
 class User:
 
+
+    users_info_list = []
+
     def __init__(self, username, password):
         self.username = username
         self.__password = password
@@ -42,7 +45,6 @@ class User:
         usernames_list = []
         for item in information_list:
             usernames_list.append(item['username'])
-
         if self.username not in usernames_list:
 
             info = {'username': self.username, 'password': User.hash_method(self.__password)}
@@ -53,32 +55,31 @@ class User:
 
     @staticmethod
     def get_users_info_list():
-        """
-        a list of tuples >> [(username,password)]
-        """
+        # a list of tuples >> [(username,password)]
         my_file = file_handling.File('users_information.csv')
         information_list = my_file.read_csvfile_as_dictionary()
-        users_list = []
         for item in information_list:
-            users_list.append((item['username'], item['password']))
-        return users_list
+            User.users_info_list.append((item['username'], item['password']))
+        return User.users_info_list
 
     def login(self):
-        # if the username and password is correct,the user can sign in .
-
+        # if the username and password is correct,the user can log in .
         info_list = User.get_users_info_list()
-        usernames_list = info_list[0]
-        print(usernames_list)
-
-        if self.username not in usernames_list:
+        users_list = []
+        password_list = []
+        for i in info_list:
+            users_list.append(i[0])
+            password_list.append(i[1])
+        if self.username not in users_list:
             logger.error('this username not exist!')
         else:
-            for item in info_list:
-                if item[self.username] == User.hash_method(self.__password):
-                    logger.info(f'You: {self.username} have successfully entered the program :) ')
-                else:
-                    logger.error('the password is not correct.try again')
-        return "sign in a person into program"
+            for i in range(len(users_list)):
+                if users_list[i] == self.username:
+                    if password_list[i] == User.hash_method(self.__password):
+                        print(f'You:{self.username} have successfully entered the program :)')
+                        logger.info(f'You:{self.username} have successfully entered the program :) ')
+                    else:
+                        logger.error('the password is not correct.try again')
 
     def validation_password(self):
         # Password must be 6 to 12 characters, 1 lowercase letter
@@ -95,12 +96,9 @@ class User:
         obj_hashing = sha3_256(obj.encode('ascii')).hexdigest()
         return obj_hashing
 
-    def check_hash_items(self, password1):
-        password1 = User.hash_method(password1)
-        password = User.hash_method(self.__password)
-        if password1 == password:
-            return True
-        return False
+    def locking_account(self):
+        return f"an user: {self.username} locked because entire incorrect password 3 time"
 
     def __repr__(self):
         return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
+

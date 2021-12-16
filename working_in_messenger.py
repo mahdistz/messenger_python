@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(level=logging.INFO)
+stream_handler.setLevel(level=logging.WARNING)
 file_handler = logging.FileHandler('user.log')
-file_handler.setLevel(level=logging.WARNING)
+file_handler.setLevel(level=logging.INFO)
 
 # create formatters and add it to handlers
 
