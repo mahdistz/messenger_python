@@ -25,6 +25,7 @@ logger.addHandler(file_handler)
 
 
 def checking_for_register(username, password):
+
     validation = False
     an_user = user_account.User(username, password)
     if an_user.validation_username():
@@ -36,16 +37,6 @@ def checking_for_register(username, password):
                 validation = True
             else:
                 logger.error('The password you entered does not match the default password.')
-                print('You can try up to 3 times')
-                for i in range(3):
-                    again_password_list = [i for i in input('repeat password : ')]
-                    if again_password_list[i] == password:
-                        print('you successfully added to Messenger.')
-                        validation = True
-                        break
-                    else:
-                        print('sorry you can not try anymore! ')
-                        logger.info(f'The account: {username} is locked! ')
         else:
             print('the password is not correct!')
     else:
@@ -92,11 +83,11 @@ while True:
                 elif wanting_quit == 'n':
                     continue
                 else:
-                    raise print('you should enter y or n')
+                    raise ValueError('you should enter y or n')
             else:
-                raise print('you should enter y or n')
+                raise ValueError('you should enter y or n')
         else:
-            raise print('you should enter y or n')
+            raise ValueError('you should enter y or n')
 
     except (ValueError, TypeError) as error:
         logger.error('an exception occurred', exc_info=True)

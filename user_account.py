@@ -1,4 +1,5 @@
 import logging
+import os
 from hashlib import sha3_256
 from re import compile
 import file_handling
@@ -29,47 +30,58 @@ USERNAME_REGEX = compile(r'\A[\w\-\.]{3,12}\Z')
 
 class User:
 
-
-    users_info_list = []
-
     def __init__(self, username, password):
         self.username = username
         self.__password = password
 
     def register(self):
+
         # for each user ,username and password must be saved in file
         # if his/her username not exist, he/she can sign up .
-        # information_list = [{'key':'value'},...]
-        my_file = file_handling.File('users_information.csv')
-        information_list = my_file.read_csvfile_as_dictionary()
-        usernames_list = []
-        for item in information_list:
-            usernames_list.append(item['username'])
-        if self.username not in usernames_list:
+        # information_list = [{'username':'...','password(hash)':'...'},...]
 
-            info = {'username': self.username, 'password': User.hash_method(self.__password)}
-            file_handling.File('users_information.csv').write(info)
-            logger.info(f" new person with username: {self.username},registered into program")
+        my_file = file_handling.File('users_information.csv')
+        if os.path.exists('users_information.csv'):
+            information_list = my_file.read_csvfile_as_dictionary()
         else:
-            logging.warning("this username isn't available")
+            my_file.write({'username': '', 'password': ''})
+            information_list = []
+
+        if information_list:
+            usernames_list = []
+            for item in information_list:
+                usernames_list.append(item['username'])
+
+            if self.username not in usernames_list:
+
+                info = {'username': self.username, 'password': User.hash_method(self.__password)}
+                my_file.write(info)
+                logger.info(f" new person with username: {self.username},registered into program")
+            else:
+                logging.warning("this username isn't available.try Again...")
+        else:
+            info = {'username': self.username, 'password': User.hash_method(self.__password)}
+            my_file.write(info)
+            logger.info(f" new person with username: {self.username},registered into program")
 
     @staticmethod
     def get_users_info_list():
         # a list of tuples >> [(username,password)]
+        users_info_list = []
         my_file = file_handling.File('users_information.csv')
         information_list = my_file.read_csvfile_as_dictionary()
         for item in information_list:
-            User.users_info_list.append((item['username'], item['password']))
-        return User.users_info_list
+            users_info_list.append((item['username'], item['password']))
+        return users_info_list
 
     def login(self):
         # if the username and password is correct,the user can log in .
         info_list = User.get_users_info_list()
         users_list = []
         password_list = []
-        for i in info_list:
-            users_list.append(i[0])
-            password_list.append(i[1])
+        for item in info_list:
+            users_list.append(item[0])
+            password_list.append(item[1])
         if self.username not in users_list:
             logger.error('this username not exist!')
         else:
@@ -77,7 +89,7 @@ class User:
                 if users_list[i] == self.username:
                     if password_list[i] == User.hash_method(self.__password):
                         print(f'You:{self.username} have successfully entered the program :)')
-                        logger.info(f'You:{self.username} have successfully entered the program :) ')
+                        logger.info(f'"{self.username}" have successfully entered the program ')
                     else:
                         logger.error('the password is not correct.try again')
 
@@ -101,4 +113,3 @@ class User:
 
     def __repr__(self):
         return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
-
