@@ -3,6 +3,7 @@ import os
 from hashlib import sha3_256
 from re import compile
 import file_handling
+from datetime import datetime,timedelta
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -33,6 +34,7 @@ class User:
     def __init__(self, username, password):
         self.username = username
         self.__password = password
+        self.locking = False
 
     def register(self):
 
@@ -66,7 +68,7 @@ class User:
 
     @staticmethod
     def get_users_info_list():
-        # a list of tuples >> [(username,password)]
+        # returns a list of tuples >> [(username,password)]
         users_info_list = []
         my_file = file_handling.File('users_information.csv')
         information_list = my_file.read_csvfile_as_dictionary()
@@ -77,7 +79,9 @@ class User:
     def login(self):
         # if the username and password is correct,the user can log in .
         info_list = User.get_users_info_list()
+        # usernames list
         users_list = []
+        # password list
         password_list = []
         for item in info_list:
             users_list.append(item[0])
@@ -109,7 +113,14 @@ class User:
         return obj_hashing
 
     def locking_account(self):
-        return f"an user: {self.username} locked because entire incorrect password 3 time"
+        # if a user entry incorrect password for 3 time then his/her account
+        # locked for one hour
+        self.locking = True
+        now = datetime.now()
+        unlocking_account = now + timedelta(hours=1)
+        if datetime.now() >= unlocking_account:
+            self.locking = False
+        return self.locking
 
     def __repr__(self):
         return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
