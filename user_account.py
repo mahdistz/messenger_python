@@ -37,11 +37,12 @@ class User:
         self.locking = False
 
     def register(self):
-
-        # for each user ,username and password must be saved in file
-        # if his/her username not exist, he/she can sign up .
-        # information_list = [{'username':'...','password(hash)':'...'},...]
-
+        """
+        for each user ,username and password must be saved in file
+        if his/her username not exist, he/she can sign up .
+        information_list >> a list of dictionaries of 'username and password(hashing)' of each user
+        information_list = [{'username':...,'password(hash)':...},...]
+        """
         my_file = file_handling.File('users_information.csv')
         if os.path.exists('users_information.csv'):
             information_list = my_file.read_csvfile_as_dictionary()
@@ -96,6 +97,9 @@ class User:
                         logger.info(f'"{self.username}" have successfully entered the program ')
                     else:
                         logger.error('the password is not correct.try again')
+                        # for 3 time can repeat the password and if can't entry true
+                        # password this account must be locked.
+                        # calling locking_account method
 
     def validation_password(self):
         # Password must be 6 to 12 characters, 1 lowercase letter

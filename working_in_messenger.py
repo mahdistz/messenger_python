@@ -29,13 +29,13 @@ class Messenger(user_account.User):
     def __init__(self, username, password):
         super().__init__(username, password)
 
-        self.messenger = 'messenger'
-        self.number = 'number_of_all_messages'
+        self.message = ''
+        self.number = 0
         self.reading = False  # A Boolean for checking the read or unread a message
         self.sending = False  # A Boolean for checking the message is sending or not
 
     def number_of_all_messages(self):
-        logger.warning(f'the number of unread messages for user :{self.username} is {self.number}')
+        logger.warning(f'the number of unread messages for user :{self.username} is ...')
         return "this method returned the number of all messages "
 
     def read_message(self):
@@ -96,9 +96,10 @@ class Sent(Messenger):
     def read_message(self):
         super(Sent, self).read_message()
 
-    def sent_a_message(self, other, text_of_message):
+    def sent_a_message(self, other):
         # get username of whom you want to sent message
         # get message's text for sending
         self.sending = True
         logger.warning(f'user:{self.username} sent a message to user: {other.username}')
         return f"in this method user: {self.username} can be sent a message to other user"
+
