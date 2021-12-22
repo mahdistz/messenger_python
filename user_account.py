@@ -3,7 +3,7 @@ import os
 from hashlib import sha3_256
 from re import compile
 import file_handling
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -122,5 +122,15 @@ class User:
             self.locking = False
         return self.locking
 
+    def creating_folders_for_each_user(self):
+        """
+        Creates a folder for each user called the username of that user and
+        inside that folder, creates three more folders for Inbox and Sent and Draft.
+        """
+        os.makedirs(f'{self.username}\\Inbox')
+        os.makedirs(f'{self.username}\\Draft')
+        os.makedirs(f'{self.username}\\Sent')
+
     def __repr__(self):
         return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
+
