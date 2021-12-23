@@ -85,8 +85,9 @@ class User:
         # password list
         password_list = []
         for item in info_list:
-            users_list.append(item[0])
-            password_list.append(item[1])
+            if item:
+                users_list.append(item[0])
+                password_list.append(item[1])
         if self.username not in users_list:
             logger.error('this username not exist!')
         else:

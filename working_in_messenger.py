@@ -1,6 +1,5 @@
 import logging
 import user_account
-import file_handling
 import os
 
 logger = logging.getLogger(__name__)
@@ -25,12 +24,14 @@ logger.addHandler(file_handler)
 
 
 class Messenger(user_account.User):
+    counter = 1
 
     def __init__(self, username, password):
         super().__init__(username, password)
 
         self.message = ''
-        self.number = 0
+        self.number = Messenger.counter
+        Messenger.counter += 1
         self.reading = False  # A Boolean for checking the read or unread a message
         self.sending = False  # A Boolean for checking the message is sending or not
 
@@ -43,6 +44,19 @@ class Messenger(user_account.User):
         self.reading = True
         logger.info('one message was read')
         return "this method read a message and show this to user"
+
+    @staticmethod
+    def wanting_to_sent_message():
+        try:
+            wanting = input('Are You Sure To Send This Message??:(yes/no)').lower()
+            if wanting == 'yes':
+                return True
+            elif wanting == 'no':
+                return False
+            else:
+                raise ValueError('You should enter "yes" or "no" !!')
+        except (ValueError, TypeError) as e:
+            print(e)
 
 
 class Inbox(Messenger):
@@ -100,6 +114,34 @@ class Sent(Messenger):
         # get username of whom you want to sent message
         # get message's text for sending
         self.sending = True
-        logger.warning(f'user:{self.username} sent a message to user: {other.username}')
+        logger.info(f'user:{self.username} sent a message to user: {other.username}')
         return f"in this method user: {self.username} can be sent a message to other user"
 
+
+class CreateNewMessage(Messenger):
+
+    def __init__(self, username, password):
+        super().__init__(username, password)
+
+    def create_new_message(self, other, new_message):
+        if Messenger.wanting_to_sent_message():
+            with open(os.path.join(f'{self.username}\\Sent', f'message-{self.number}' + ".txt"), 'w') as message1:
+                message1.write(new_message)
+
+            with open(os.path.join(f'{other.username}\\Inbox', f'message-{other.number}' + ".txt"), 'w') as message2:
+                message2.write(new_message)
+        else:
+            with open(os.path.join(f'{self.username}\\Draft', f'message-{self.number}' + ".txt"), 'w') as message3:
+                message3.write(new_message)
+
+
+class DeleteMessage(Messenger):
+    pass
+
+
+class DeleteFolder(Messenger):
+    pass
+
+
+class ExitFromMessanger(Messenger):
+    pass
