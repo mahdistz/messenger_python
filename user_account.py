@@ -1,106 +1,58 @@
-import logging
+from logging_module import *
 import os
 from hashlib import sha3_256
 from re import compile
-import file_handling
+from file_handling import *
 from datetime import datetime, timedelta
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(level=logging.WARNING)
-file_handler = logging.FileHandler('user.log')
-file_handler.setLevel(level=logging.INFO)
-
-# create formatters and add it to handlers
-
-stream_format = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-file_format = logging.Formatter('%(asctime)s ::%(levelname)s - %(filename)s - %(message)s')
-stream_handler.setFormatter(stream_format)
-file_handler.setFormatter(file_format)
-
-# add handlers to the logger
-
-logger.addHandler(stream_handler)
-logger.addHandler(file_handler)
 
 PASSWORD_REGEX = compile(r'\A(?=\S*?\d)(?=\S*?[A-Z])(?=\S*?[a-z])\S{6,12}\Z')
 USERNAME_REGEX = compile(r'\A[\w\-\.]{3,12}\Z')
 
 
+# parent af Register and Login classes
 class User:
 
     def __init__(self, username, password):
         self.username = username
         self.__password = password
-        self.locking = False
-
-    def register(self):
-        """
-        for each user ,username and password must be saved in file
-        if his/her username not exist, he/she can sign up .
-        information_list >> a list of dictionaries of 'username and password(hashing)' of each user
-        information_list = [{'username':...,'password(hash)':...},...]
-        """
-        my_file = file_handling.File('users_information.csv')
-        if os.path.exists('users_information.csv'):
-            information_list = my_file.read_csvfile_as_dictionary()
-        else:
-            my_file.write({'username': '', 'password': ''})
-            information_list = []
-
-        if information_list:
-            usernames_list = []
-            for item in information_list:
-                usernames_list.append(item['username'])
-
-            if self.username not in usernames_list:
-
-                info = {'username': self.username, 'password': User.hash_method(self.__password)}
-                my_file.write(info)
-                logger.info(f" new person with username: {self.username},registered into program")
-            else:
-                logging.warning("this username isn't available.try Again...")
-        else:
-            info = {'username': self.username, 'password': User.hash_method(self.__password)}
-            my_file.write(info)
-            logger.info(f" new person with username: {self.username},registered into program")
 
     @staticmethod
-    def get_users_info_list():
-        # returns a list of tuples >> [(username,password)]
-        users_info_list = []
-        my_file = file_handling.File('users_information.csv')
-        information_list = my_file.read_csvfile_as_dictionary()
-        for item in information_list:
-            users_info_list.append((item['username'], item['password']))
-        return users_info_list
+    def hash_method(obj):
+        obj_hashing = sha3_256(obj.encode('ascii')).hexdigest()
+        return obj_hashing
 
-    def login(self):
-        # if the username and password is correct,the user can log in .
-        info_list = User.get_users_info_list()
+    @staticmethod
+    def get_info_from_csvfile():
+        """
+        This method reads the csv file (or create this) and return a tuple.
+        information_list -->> a list of dictionaries of 'username and password(hashing)' of each user
+        users_list -->> list of usernames
+        passwords_list -->> list of passwords(hashing)
+        :return: ([{'username':...,'password(hash)':...}],[usernames],[passwords])
+        """
         # usernames list
         users_list = []
         # password list
-        password_list = []
-        for item in info_list:
-            if item:
-                users_list.append(item[0])
-                password_list.append(item[1])
-        if self.username not in users_list:
-            logger.error('this username not exist!')
+        passwords_list = []
+        my_file = File('users_information.csv')
+        if os.path.exists('users_information.csv'):
+            information_list = my_file.read_csvfile_as_dictionary()
+            for item in information_list:
+                users_list.append(item['username'])
+                passwords_list.append(item['password'])
         else:
-            for i in range(len(users_list)):
-                if users_list[i] == self.username:
-                    if password_list[i] == User.hash_method(self.__password):
-                        print(f'You:{self.username} have successfully entered the program :)')
-                        logger.info(f'"{self.username}" have successfully entered the program ')
-                    else:
-                        logger.error('the password is not correct.try again')
-                        # for 3 time can repeat the password and if can't entry true
-                        # password this account must be locked.
-                        # calling locking_account method
+            # creating csv file
+            my_file.write({'username': '', 'password': ''})
+            information_list = []
+        return information_list, users_list, passwords_list
+
+    def __repr__(self):
+        return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
+
+
+class Register(User):
+    def __init__(self, username, password):
+        super(Register, self).__init__(username, password)
 
     def validation_password(self):
         # Password must be 6 to 12 characters, 1 lowercase letter
@@ -112,13 +64,41 @@ class User:
         # letters,numbers and "-" ,"." ,"_"
         return USERNAME_REGEX.match(self.username) is not None
 
-    @staticmethod
-    def hash_method(obj):
-        obj_hashing = sha3_256(obj.encode('ascii')).hexdigest()
-        return obj_hashing
+    def creating_folders_for_each_user(self):
+        """
+        this method first create users folder then,
+        Creates a folder for each user called the username of that user and
+        inside that folder, creates three more folders for Inbox and Sent and Draft.
+        """
+        os.makedirs(f'users\\{self.username}\\Inbox')
+        os.makedirs(f'users\\{self.username}\\Draft')
+        os.makedirs(f'users\\{self.username}\\Sent')
+
+    def writing_in_file(self):
+        # for each user ,username and password must be saved in file
+        info = {'username': self.username, 'password': User.hash_method(self.__password)}
+        File('users_information.csv').write(info)
+
+    def register(self):
+
+        my_tuple = User.get_info_from_csvfile()
+        usernames_list = my_tuple[1]
+
+        if self.username not in usernames_list:
+            Register.writing_in_file(self)
+            logger.info(f" new person with username: {self.username},registered into program")
+        else:
+            # This means there is a user with this username and this username is not available
+            logger.warning(f"this username: {self.username} is not available.try Again...")
+
+
+class Login(User):
+    def __init__(self, username, password):
+        super(Login, self).__init__(username, password)
+        self.locking = False
 
     def locking_account(self):
-        # if a user entry incorrect password for 3 time then his/her account
+        # if a user enter incorrect password for 3 time then his/her account
         # locked for one hour
         self.locking = True
         now = datetime.now()
@@ -127,15 +107,52 @@ class User:
             self.locking = False
         return self.locking
 
-    def creating_folders_for_each_user(self):
-        """
-        Creates a folder for each user called the username of that user and
-        inside that folder, creates three more folders for Inbox and Sent and Draft.
-        """
-        os.makedirs(f'{self.username}\\Inbox')
-        os.makedirs(f'{self.username}\\Draft')
-        os.makedirs(f'{self.username}\\Sent')
+    def login(self):
+        my_tuple = User.get_info_from_csvfile()
+        users_list = my_tuple[1]
+        password_list = my_tuple[2]
+        if self.username not in users_list:
+            logger.error(f'this username:{self.username} not exist!')
+        else:
+            # If the user's account is not locked, it can be entered
+            if not self.locking:
+                for i in range(len(users_list)):
+                    if users_list[i] == self.username:
+                        if password_list[i] == User.hash_method(self.__password):
+                            logger.info(f'"{self.username}" have successfully entered the program ')
+                        else:
+                            print('the password is not correct.you can try 2 more times.')
+                            if Login.incorrect_password(self):
+                                logger.info(f'"{self.username}" have successfully entered the program ')
+                                continue
+                            else:
+                                # if user can't enter true password her/his account must be locked.
+                                Login.locking_account(self)
+                                logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
+                                               f' entered incorrect password for 3 time.')
+            else:
+                logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user entered '
+                               f'incorrect password for 3 time.')
 
-    def __repr__(self):
-        return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
-
+    def incorrect_password(self):
+        """
+        The user is allowed to enter his password 3 times in total.
+        in login method he/she enters the wrong password once and in this method he/she can try 2 more times.
+        :return: 'correct_password' is True when user enters true password
+        """
+        # find true password by reading csv_file
+        info_list = User.get_info_from_csvfile()
+        for item in info_list[0]:
+            # info_list[0] -->> [{'username','password(hash)'}]
+            if item['username'] == self.username:
+                password = item['password']
+        correct_password = False
+        count = 0
+        while count < 2:
+            repeat_pass = input('Repeat Your Password: ')
+            count += 1
+            # 'password' is hashed.So 'repeat_pass' must also be hashed,that they can be compared.
+            if User.hash_method(repeat_pass) == password:
+                correct_password = True
+                break
+        return correct_password
