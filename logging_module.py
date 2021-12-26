@@ -10,7 +10,7 @@ file_handler.setLevel(level=logging.INFO)
 
 # create formatters and add it to handlers
 
-stream_format = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+stream_format = logging.Formatter('%(levelname)s - %(message)s')
 file_format = logging.Formatter('%(asctime)s ::%(levelname)s - %(filename)s - %(message)s')
 stream_handler.setFormatter(stream_format)
 file_handler.setFormatter(file_format)
