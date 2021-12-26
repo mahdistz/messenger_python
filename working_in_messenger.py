@@ -1,54 +1,66 @@
-import logging
-import user_account
+import pandas as pd
+from logging_module import *
+from user_account import *
+from datetime import datetime, time
 import os
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(level=logging.WARNING)
-file_handler = logging.FileHandler('user.log')
-file_handler.setLevel(level=logging.INFO)
-
-# create formatters and add it to handlers
-
-stream_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_format = logging.Formatter('%(asctime)s ::%(levelname)s - %(filename)s - %(message)s')
-stream_handler.setFormatter(stream_format)
-file_handler.setFormatter(file_format)
-
-# add handlers to the logger
-
-logger.addHandler(stream_handler)
-logger.addHandler(file_handler)
+import re
 
 
-class Messenger(user_account.User):
+class Messenger:
     counter = 1
+    data_list = []
+    instance_list = []
 
-    def __init__(self, username, password):
-        super().__init__(username, password)
-
-        self.message = ''
+    def __init__(self, message, username1, username2):
+        self.username1 = username1
+        self.username2 = username2
+        self.message = message
         self.number = Messenger.counter
         Messenger.counter += 1
-        self.reading = False  # A Boolean for checking the read or unread a message
-        self.sending = False  # A Boolean for checking the message is sending or not
+        self.is_read = False  # A Boolean for checking the read or unread a message
+        self.is_send = False  # A Boolean for checking the message is sending or not
+        Messenger.instance_list.append(self)
 
-    def number_of_all_messages(self):
-        logger.warning(f'the number of unread messages for user :{self.username} is ...')
-        return "this method returned the number of all messages "
+    def saving_info_in_file(self, file_name, username):
+
+        date_time = Messenger.date_time()
+        message_path = f'users\\{username}\\{file_name}\\message-{self.number}'
+        data = [self.number, message_path, date_time, self.is_read, self.is_send, self.username1, self.username2]
+        headers = ['message_number', 'message_path', 'date-time', 'is_read', 'is_send', 'Sender', 'Receiver']
+        Messenger.data_list.append(data)
+        df_data = pd.DataFrame(Messenger.data_list, columns=headers)
+        df_data.to_csv(f'users\\{username}\\{file_name}\\information.csv')
+
+        return df_data
+
+    def save_message_into_folder(self, file_name, username):
+
+        lines = Messenger.get_all_sentence_in_string(self.message)
+        lines1 = [item + '\n' for item in lines]
+        with open(os.path.join(f'users\\{username}\\{file_name}', f'message-{self.number}' + ".txt"), 'w+') as file:
+            file.writelines(lines1)
+
+        return lines1
+
+    def number_of_all_messages(self, file_name):
+        unread_messages = []
+
+        list_1 = os.listdir(f'users\\{self.username1}\\{file_name}')
+        logger.warning(f'the number of unread messages for user :{self.username1} is {len(unread_messages)}')
+        return len(list_1)-1
 
     def read_message(self):
         # in this method one message after reading should get tag read
-        self.reading = True
-        logger.info('one message was read')
-        return "this method read a message and show this to user"
+        self.is_read = True
+        return self.is_read
+
+    def delete_message(self, folder_name):
+        os.remove(f'users\\{self.username1}\\{folder_name}\\{self.message}')
 
     @staticmethod
     def wanting_to_sent_message():
         try:
-            wanting = input('Are You Sure To Send This Message??:(yes/no)').lower()
+            wanting = input('Are You Sure To Send This Message??(yes/no):').lower()
             if wanting == 'yes':
                 return True
             elif wanting == 'no':
@@ -58,90 +70,115 @@ class Messenger(user_account.User):
         except (ValueError, TypeError) as e:
             print(e)
 
+    @staticmethod
+    def date_time():
+        now = datetime.now()
+        now_time = time(now.hour, now.minute, now.second)
+        now_date = now.date()
+        date_time = datetime.combine(now_date, now_time)
+        str_date_time = date_time.strftime('%Y-%m-%d %H:%M:%S')
+        return str_date_time
+
+    @staticmethod
+    def get_all_sentence_in_string(string):
+        # pattern : to find all sentence in a string or words
+        pattern = re.compile(r'([\w][^\.!?]*[\.!?]*|[\w][^\.!?]*)', re.M)
+        sentence_list = pattern.findall(string)
+        return sentence_list
+
 
 class Inbox(Messenger):
+    counter = 1
+
+    def __init__(self, message, username1, username2):
+        super().__init__(message, username1, username2)
+        self.number = Inbox.counter
+        Inbox.counter += 1
 
     def read_message(self):
-        super(Inbox, self).read_message()
+        pass
 
-    def number_of_all_messages(self):
-        super(Inbox, self).number_of_all_messages()
+    def number_of_all_messages(self, file_name):
+        super(Inbox, self).number_of_all_messages(self)
 
     def reply_to_one_message(self):
-        logger.info(f'the user : {self.username} reply a message in Inbox folder')
-        return f"in this method user:{self.username} can reply to one of the messages in inbox folder"
+        logger.info(f'the user : {self.username1} reply a message in Inbox folder')
+        return f"in this method user:{self.username1} can reply to one of the messages in inbox folder"
 
     def number_of_unread_messages(self):
         # number of unread message = number of total message - number of read messages
-        logger.warning(f'the numer of unread messages for user {self.username} is : ...')
+        logger.warning(f'the numer of unread messages for user {self.username1} is : ...')
         return "this method returned number of unread messages"
 
     def get_tag_read(self):
         # The read messages gets the tag read
-        self.reading = True
+        self.is_read = True
         return "the read messages get the tag 'read'"
 
 
 class Draft(Messenger):
+    counter = 1
+
+    def __init__(self, message, username1, username2):
+        super().__init__(message, username1, username2)
+        self.number = Draft.counter
+        Draft.counter += 1
 
     def read_message(self):
         super(Draft, self).read_message()
 
-    def number_of_all_messages(self):
+    def number_of_all_messages(self, file_name='Draft'):
         super(Draft, self).number_of_all_messages()
 
     def sent_one_message_from_draft(self):
-        self.sending = True
-        logger.info(f'the user:{self.username} sent of message from draft folder')
-        return f"in this method user:{self.username} can be sent one of the messages in draft folder."
+        self.is_send = True
+        logger.info(f'the user:{self.username1} sent of message from draft folder')
+        return f"in this method user:{self.username1} can be sent one of the messages in draft folder."
 
     def get_tag_sent(self):
         # if one message of draft has sent it gets the tag sent
         # and move to inbox of user who sent message to her/him
-        self.sending = True
+        self.is_send = True
         return "the sent message should get tag sent"
 
 
 class Sent(Messenger):
+    counter = 1
 
-    def number_of_all_messages(self):
-        super().number_of_all_messages()
+    def __init__(self, message, username1, username2):
+        super().__init__(message, username1, username2)
+        self.number = Sent.counter
+        Sent.counter += 1
+
+    def number_of_all_messages(self, file_name='Sent'):
+        super().number_of_all_messages(self)
 
     def read_message(self):
         super(Sent, self).read_message()
 
-    def sent_a_message(self, other):
+    def forward_a_message(self):
         # get username of whom you want to sent message
         # get message's text for sending
-        self.sending = True
-        logger.info(f'user:{self.username} sent a message to user: {other.username}')
-        return f"in this method user: {self.username} can be sent a message to other user"
+        self.is_send = True
+        logger.info(f'user:{self.username1} sent a message to user: {self.username2}')
 
 
-class CreateNewMessage(Messenger):
+class NewMessage(Messenger):
+    counter = 1
 
-    def __init__(self, username, password):
-        super().__init__(username, password)
+    def __init__(self, message, username1, username2):
+        super().__init__(message, username1, username2)
+        self.number = NewMessage.counter
+        NewMessage.counter += 1
 
-    def create_new_message(self, other, new_message):
-        if Messenger.wanting_to_sent_message():
-            with open(os.path.join(f'{self.username}\\Sent', f'message-{self.number}' + ".txt"), 'w') as message1:
-                message1.write(new_message)
-
-            with open(os.path.join(f'{other.username}\\Inbox', f'message-{other.number}' + ".txt"), 'w') as message2:
-                message2.write(new_message)
+    def sending_message(self, username2):
+        # send message from username1 to username2
+        my_tuple = User.get_info_from_csvfile()
+        username_list = my_tuple[1]
+        if username2 in username_list:
+            if Messenger.wanting_to_sent_message():
+                pass
+            else:
+                pass
         else:
-            with open(os.path.join(f'{self.username}\\Draft', f'message-{self.number}' + ".txt"), 'w') as message3:
-                message3.write(new_message)
-
-
-class DeleteMessage(Messenger):
-    pass
-
-
-class DeleteFolder(Messenger):
-    pass
-
-
-class ExitFromMessanger(Messenger):
-    pass
+            logger.warning('this username not exist!!!')
