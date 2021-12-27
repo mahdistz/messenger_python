@@ -67,12 +67,24 @@ class Register(User):
     def creating_folders_for_each_user(self):
         """
         this method first create users folder then,
-        Creates a folder for each user called the username of that user and
-        inside that folder, creates three more folders for Inbox and Sent and Draft.
+        Creates a folder for each user called the username of that user
         """
-        os.makedirs(f'users\\{self.username}\\Inbox')
-        os.makedirs(f'users\\{self.username}\\Draft')
-        os.makedirs(f'users\\{self.username}\\Sent')
+        os.makedirs(f'users\\{self.username}')
+        os.makedirs(f'users\\{self.username}')
+        os.makedirs(f'users\\{self.username}')
+
+    def creating_csvfile_for_each_user(self):
+        """
+        in each folder of usernames creates 3 csv file for
+        handling sent ,draft and inbox
+        """
+        items = ['sent.csv', 'draft.csv', 'inbox.csv']
+        for item in items:
+            with open(f'users\\{self.username}\\{item}', 'a') as file:
+                headers = ['message', 'date-time', 'is_read', 'is_send', 'Sender', 'Receiver']
+                writer = csv.DictWriter(file, fieldnames=headers)
+                if file.tell() == 0:
+                    writer.writeheader()
 
     def writing_in_file(self):
         # for each user ,username and password must be saved in file
@@ -145,14 +157,14 @@ class Login(User):
         for item in info_list[0]:
             # info_list[0] -->> [{'username','password(hash)'}]
             if item['username'] == self.username:
-                password = item['password']
+                true_password = item['password']
         correct_password = False
         count = 0
         while count < 2:
-            repeat_pass = input('Repeat Your Password: ')
+            repeat_password = input('Repeat Your Password: ')
             count += 1
             # 'password' is hashed.So 'repeat_pass' must also be hashed,that they can be compared.
-            if User.hash_method(repeat_pass) == password:
+            if User.hash_method(repeat_password) == true_password:
                 correct_password = True
                 break
         return correct_password
