@@ -2,60 +2,67 @@ import pandas as pd
 from logging_module import *
 from user_account import *
 from datetime import datetime, time
-import os
-import re
 
 
 class Messenger:
-    counter = 1
-    data_list = []
-    instance_list = []
 
     def __init__(self, message, username1, username2):
         self.username1 = username1
         self.username2 = username2
         self.message = message
-        self.number = Messenger.counter
-        Messenger.counter += 1
         self.is_read = False  # A Boolean for checking the read or unread a message
         self.is_send = False  # A Boolean for checking the message is sending or not
-        Messenger.instance_list.append(self)
 
     def saving_info_in_file(self, file_name, username):
 
         date_time = Messenger.date_time()
-        message_path = f'users\\{username}\\{file_name}\\message-{self.number}'
-        data = [self.number, message_path, date_time, self.is_read, self.is_send, self.username1, self.username2]
-        headers = ['message_number', 'message_path', 'date-time', 'is_read', 'is_send', 'Sender', 'Receiver']
-        Messenger.data_list.append(data)
-        df_data = pd.DataFrame(Messenger.data_list, columns=headers)
-        df_data.to_csv(f'users\\{username}\\{file_name}\\information.csv')
+        data = [self.message, date_time, self.is_read, self.is_send, self.username1, self.username2]
+        headers = ['message', 'date-time', 'is_read', 'is_send', 'Sender', 'Receiver']
+        list_data = [data]
+        df_data = pd.DataFrame(list_data, columns=headers)
+        with open(f'users\\{username}\\{file_name}', mode='a+') as file:
+            df_data.to_csv(file, mode='a', index=False, header=False)
 
         return df_data
 
-    def save_message_into_folder(self, file_name, username):
+    @staticmethod
+    def loading_data_from_csvfile_to_dataframe(file_name, username):
+        with open(f'users\\{username}\\{file_name}', mode='r') as file:
+            reader = csv.DictReader(file)
+            dt = pd.DataFrame(reader)
+        return dt
 
-        lines = Messenger.get_all_sentence_in_string(self.message)
-        lines1 = [item + '\n' for item in lines]
-        with open(os.path.join(f'users\\{username}\\{file_name}', f'message-{self.number}' + ".txt"), 'w+') as file:
-            file.writelines(lines1)
-
-        return lines1
-
-    def number_of_all_messages(self, file_name):
+    def number_of_all_messages(self, csvfile_name):
         unread_messages = []
-
-        list_1 = os.listdir(f'users\\{self.username1}\\{file_name}')
+        df = Messenger.loading_data_from_csvfile_to_dataframe(csvfile_name, self.username1)
+        number_of_rows = len(df.index)
         logger.warning(f'the number of unread messages for user :{self.username1} is {len(unread_messages)}')
-        return len(list_1)-1
+        return number_of_rows
 
-    def read_message(self):
+    def read_message(self, index, csvfile_name):
+        df = Messenger.loading_data_from_csvfile_to_dataframe(csvfile_name, self.username1)
+        message_output = df.at[index, 'message']
         # in this method one message after reading should get tag read
         self.is_read = True
-        return self.is_read
+        Messenger.update_column_value_of_dataframe(self, csvfile_name, index, 'is_read', 'True')
+        return message_output
 
-    def delete_message(self, folder_name):
-        os.remove(f'users\\{self.username1}\\{folder_name}\\{self.message}')
+    def delete_message(self, csvfile_name, index):
+        # with pandas
+        df = Messenger.loading_data_from_csvfile_to_dataframe(csvfile_name, self.username1)
+        df.drop(index=df.index[index],
+                axis=0,
+                inplace=True)
+        return df
+
+    def update_column_value_of_dataframe(self, file_name, index, column_name, new_value):
+
+        df = pd.read_csv(f'users\\{self.username1}\\{file_name}')
+        # updating the column value/data
+        df.loc[index, column_name] = new_value
+        # writing into the file
+        df.to_csv(f'users\\{self.username1}\\{file_name}', index=False)
+        return df
 
     @staticmethod
     def wanting_to_sent_message():
@@ -79,27 +86,19 @@ class Messenger:
         str_date_time = date_time.strftime('%Y-%m-%d %H:%M:%S')
         return str_date_time
 
-    @staticmethod
-    def get_all_sentence_in_string(string):
-        # pattern : to find all sentence in a string or words
-        pattern = re.compile(r'([\w][^\.!?]*[\.!?]*|[\w][^\.!?]*)', re.M)
-        sentence_list = pattern.findall(string)
-        return sentence_list
-
 
 class Inbox(Messenger):
-    counter = 1
 
     def __init__(self, message, username1, username2):
         super().__init__(message, username1, username2)
-        self.number = Inbox.counter
-        Inbox.counter += 1
 
-    def read_message(self):
-        pass
+    def read_message(self, index, csvfile_name='inbox.csv'):
+        output = super(Inbox, self).read_message(index, csvfile_name='inbox.csv')
+        return output
 
-    def number_of_all_messages(self, file_name):
-        super(Inbox, self).number_of_all_messages(self)
+    def number_of_all_messages(self, csvfile_name='inbox.csv'):
+        output = super(Inbox, self).number_of_all_messages(csvfile_name='inbox.csv')
+        return output
 
     def reply_to_one_message(self):
         logger.info(f'the user : {self.username1} reply a message in Inbox folder')
@@ -117,18 +116,17 @@ class Inbox(Messenger):
 
 
 class Draft(Messenger):
-    counter = 1
 
     def __init__(self, message, username1, username2):
         super().__init__(message, username1, username2)
-        self.number = Draft.counter
-        Draft.counter += 1
 
-    def read_message(self):
-        super(Draft, self).read_message()
+    def read_message(self, index, csvfile_name='draft.csv'):
+        output = super(Draft, self).read_message(index, csvfile_name='draft.csv')
+        return output
 
-    def number_of_all_messages(self, file_name='Draft'):
-        super(Draft, self).number_of_all_messages()
+    def number_of_all_messages(self, csvfile_name='draft.csv'):
+        output = super(Draft, self).number_of_all_messages(csvfile_name='draft.csv')
+        return output
 
     def sent_one_message_from_draft(self):
         self.is_send = True
@@ -143,39 +141,34 @@ class Draft(Messenger):
 
 
 class Sent(Messenger):
-    counter = 1
 
     def __init__(self, message, username1, username2):
         super().__init__(message, username1, username2)
-        self.number = Sent.counter
-        Sent.counter += 1
 
-    def number_of_all_messages(self, file_name='Sent'):
-        super().number_of_all_messages(self)
+    def read_message(self, index, csvfile_name='sent.csv'):
+        output = super(Sent, self).read_message(index, csvfile_name='sent.csv')
+        return output
 
-    def read_message(self):
-        super(Sent, self).read_message()
+    def number_of_all_messages(self, csvfile_name='sent.csv'):
+        output = super(Sent, self).number_of_all_messages(csvfile_name='sent.csv')
+        return output
 
     def forward_a_message(self):
-        # get username of whom you want to sent message
-        # get message's text for sending
         self.is_send = True
         logger.info(f'user:{self.username1} sent a message to user: {self.username2}')
 
 
 class NewMessage(Messenger):
-    counter = 1
 
     def __init__(self, message, username1, username2):
         super().__init__(message, username1, username2)
-        self.number = NewMessage.counter
-        NewMessage.counter += 1
 
-    def sending_message(self, username2):
+    def sending_message(self):
         # send message from username1 to username2
         my_tuple = User.get_info_from_csvfile()
         username_list = my_tuple[1]
-        if username2 in username_list:
+
+        if self.username2 in username_list:
             if Messenger.wanting_to_sent_message():
                 pass
             else:
