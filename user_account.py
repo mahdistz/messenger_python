@@ -14,7 +14,7 @@ class User:
 
     def __init__(self, username, password):
         self.username = username
-        self.__password = password
+        self.password = password
 
     @staticmethod
     def hash_method(obj):
@@ -46,9 +46,6 @@ class User:
             information_list = []
         return information_list, users_list, passwords_list
 
-    def __repr__(self):
-        return f'username: {self.username},password(hashing): {User.hash_method(self.__password)}'
-
 
 class Register(User):
     def __init__(self, username, password):
@@ -57,21 +54,20 @@ class Register(User):
     def validation_password(self):
         # Password must be 6 to 12 characters, 1 lowercase letter
         # 1 uppercase letter,1 digit
-        return PASSWORD_REGEX.match(self.__password) is not None
+        return PASSWORD_REGEX.match(self.password) is not None
 
     def validation_username(self):
         # username must be 3 to 12 characters and can include
         # letters,numbers and "-" ,"." ,"_"
         return USERNAME_REGEX.match(self.username) is not None
 
-    def creating_folders_for_each_user(self):
+    def creating_folder_for_each_user(self):
         """
         this method first create users folder then,
         Creates a folder for each user called the username of that user
         """
-        os.makedirs(f'users\\{self.username}')
-        os.makedirs(f'users\\{self.username}')
-        os.makedirs(f'users\\{self.username}')
+        if not os.path.exists(f'users\\{self.username}'):
+            os.makedirs(f'users\\{self.username}')
 
     def creating_csvfile_for_each_user(self):
         """
@@ -88,7 +84,7 @@ class Register(User):
 
     def writing_in_file(self):
         # for each user ,username and password must be saved in file
-        info = {'username': self.username, 'password': User.hash_method(self.__password)}
+        info = {'username': self.username, 'password': User.hash_method(self.password)}
         File('users_information.csv').write(info)
 
     def register(self):
@@ -99,9 +95,11 @@ class Register(User):
         if self.username not in usernames_list:
             Register.writing_in_file(self)
             logger.info(f" new person with username: {self.username},registered into program")
+            return True
         else:
             # This means there is a user with this username and this username is not available
             logger.warning(f"this username: {self.username} is not available.try Again...")
+            return False
 
 
 class Login(User):
@@ -120,31 +118,36 @@ class Login(User):
         return self.locking
 
     def login(self):
+
         my_tuple = User.get_info_from_csvfile()
         users_list = my_tuple[1]
         password_list = my_tuple[2]
         if self.username not in users_list:
             logger.error(f'this username:{self.username} not exist!')
+            return False
         else:
             # If the user's account is not locked, it can be entered
             if not self.locking:
                 for i in range(len(users_list)):
                     if users_list[i] == self.username:
-                        if password_list[i] == User.hash_method(self.__password):
+                        if password_list[i] == User.hash_method(self.password):
                             logger.info(f'"{self.username}" have successfully entered the program ')
+                            return True
                         else:
                             print('the password is not correct.you can try 2 more times.')
                             if Login.incorrect_password(self):
                                 logger.info(f'"{self.username}" have successfully entered the program ')
-                                continue
+                                return True
                             else:
                                 # if user can't enter true password her/his account must be locked.
                                 Login.locking_account(self)
                                 logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
                                                f' entered incorrect password for 3 time.')
+                                return False
             else:
                 logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user entered '
                                f'incorrect password for 3 time.')
+                return False
 
     def incorrect_password(self):
         """
