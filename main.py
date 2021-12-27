@@ -35,16 +35,19 @@ def getting_into_messenger(user):
                 input2 = input('>>>')
 
                 if input2 == '1':
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user)
+                    Messenger.number_of_all_messages(user, 'inbox.csv')
+                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
                     print(all_messages)
 
                 elif input2 == '2':
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user)
+                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
                     print(all_messages)
-                    item = input('Enter index of messages to read this!\n>>>')
 
-                    if item in range(len(all_messages.index)):
-                        print(Inbox('', user, '').read_message(index=item))
+                    item = int(input('Enter index of messages to read this!\n>>>'))
+                    numbers = Messenger.number_of_all_messages(user, 'inbox.csv')
+
+                    if item in range(numbers):
+                        print(Messenger(user.username).read_message(index=int(item), csvfile_name='inbox.csv'))
                     else:
                         logger.error('index error!there is no message with this index', exc_info=True)
 
@@ -52,20 +55,20 @@ def getting_into_messenger(user):
 
                     if input3 == '1':
                         message = input('Enter your message\n>>> ')
-                        df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user)
-                        sender = df.at[item, 'Sender']
-                        Inbox(message=message, username1=user, username2=sender).reply_to_one_message()
+                        df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
+                        sender = df.at[int(item), 'Sender']
+                        Inbox(message=message, username1=user.username, username2=sender).reply_to_one_message()
 
                     elif input3 == '2':
-                        Messenger(user).delete_message(index=item, csvfile_name='inbox.csv')
+                        Messenger(user).delete_message(index=int(item), csvfile_name='inbox.csv')
 
                     elif input3 == '3':
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message\n>>>')
                         if user2 in users_list:
-                            df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user)
-                            message = df.at[item, 'message']
-                            Inbox(message=message, username1=user, username2=user2).forward_message()
+                            df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
+                            message = df.at[int(item), 'message']
+                            Inbox(message=message, username1=user.username, username2=user2).forward_message()
                         else:
                             logger.error('this username not exist!')
                     else:
@@ -77,32 +80,33 @@ def getting_into_messenger(user):
                 input2 = input('>>>')
 
                 if input2 == '1':
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user)
+                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                     print(all_messages)
 
                 elif input2 == '2':
 
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user)
+                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                     print(all_messages)
-                    item = input('Enter index of messages to read this!\n>>>')
-
-                    if item in range(len(all_messages.index)):
-                        print(Draft('', user, '').read_message(index=item))
+                    item = int(input('Enter index of messages to read this!\n>>>'))
+                    numbers = Messenger.number_of_all_messages(user, 'draft.csv')
+                    if item in range(numbers):
+                        print(Messenger(user.username).read_message(index=int(item), csvfile_name='draft.csv'))
                     else:
-                        logger.error('index error!there is no message with this index')
+                        logger.error('index error!there is no message with this index', exc_info=True)
 
                     input3 = input('1)delete\nr2)sending message\n>>>')
 
                     if input3 == '1':
-                        Messenger(user).delete_message(index=item, csvfile_name='draft.csv')
+                        Messenger(user).delete_message(index=int(item), csvfile_name='draft.csv')
 
                     elif input3 == '2':
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message:')
                         if user2 in users_list:
-                            df = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user)
+                            df = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                             message = df.at[item, 'message']
-                            Draft(message=message, username1=user, username2=user2).sent_one_message_from_draft(item)
+                            Draft(message=message, username1=user.username, username2=user2). \
+                                sent_one_message_from_draft(item)
                         else:
                             logger.error('this username not exist')
                     else:
@@ -113,31 +117,31 @@ def getting_into_messenger(user):
                 input2 = input('>>>')
 
                 if input2 == '1':
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user)
+                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user.username)
                     print(all_messages)
 
                 elif input2 == '2':
-                    all_messages = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user)
-                    print(all_messages)
-                    item = input('Enter index of messages to read this!\n>>>')
+                    print(Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user.username))
 
-                    if item in range(len(all_messages.index)):
-                        print(Sent('', user, '').read_message(index=item))
+                    item = int(input('Enter index of messages to read this!\n>>>'))
+                    numbers = Messenger.number_of_all_messages(user, 'sent.csv')
+                    if item in range(numbers):
+                        print(Messenger(user.username).read_message(index=int(item), csvfile_name='sent.csv'))
                     else:
                         logger.error('index error!there is no message with this index', exc_info=True)
 
                     input3 = input('1)delete\r2)forward\r>>>')
 
-                    if input3 == '2':
-                        Messenger(user).delete_message(index=item, csvfile_name='sent.csv')
+                    if input3 == '1':
+                        Messenger(user).delete_message(index=int(item), csvfile_name='sent.csv')
 
-                    elif input3 == '3':
+                    elif input3 == '2':
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message\n>>>')
                         if user2 in users_list:
-                            df = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user)
-                            message = df.at[item, 'message']
-                            Sent(message=message, username1=user, username2=user2).forward_a_message()
+                            df = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user.username)
+                            message = df.at[int(item), 'message']
+                            Sent(message=message, username1=user.username, username2=user2).forward_a_message()
                         else:
                             logger.error('this username not exist!')
                     else:
@@ -149,23 +153,32 @@ def getting_into_messenger(user):
                 user2 = input('Enter username of whom you want to send message\n>>>')
                 if user2 in users_list:
                     message = input('Enter your message:')
-                    Messenger(username1=user, username2=user2, message=message).sending_message()
+                    Messenger(username=user.username, username2=user2, message=message).sending_message()
                 else:
                     logger.error('this username not exist!')
 
             elif input1 == '5':
-                Messenger.quit_from_messenger(user)
+                User.quit_from_messenger(user.username)
                 break
             else:
                 raise ValueError('you should enter a number between 1 to 5!!')
-        except TypeError as e:
-            print(e)
+
+        except (ValueError, TypeError):
+            logger.error('an exception occurred', exc_info=True)
+
+        except (NameError, IOError, FileNotFoundError):
+            logger.error('an exception occurred', exc_info=True)
+
+        except (FileExistsError, ModuleNotFoundError) :
+            logger.error('an exception occurred', exc_info=True)
+
+        except Exception :
+            logger.error('an exception occurred', exc_info=True)
 
 
 def menu_into_files():
     # files : draft , sent , inbox
-    print("""
-    1)Show all messages\r2)read messages\r3)delete one message\r4)send one of messages\r""")
+    print('\n1)Show all messages\n2)read messages')
 
 
 my_tuple = User.get_info_from_csvfile()
@@ -177,7 +190,8 @@ Menu
 
 while True:
     try:
-        my_input = input('"""Welcome to Messenger"""\n1)Register\n2)Login\n3)Exit\n>>> ').lower()
+        my_input = input('"""Welcome to Messenger"""\n1)Register\n2)Login\n3)Exit\n>>> ')
+
         if my_input == '1':
             # Register
             # condition for correct username and password
@@ -187,39 +201,44 @@ while True:
             username_input1 = input('Enter username: ')
             password_input1 = input('Enter password: ')
             # checking username and password that user entered
-            validation_register = checking_for_register(username_input1, password_input1)
-            # validation_register >> A Boolean : True / False
-            if validation_register:
+            if username_input1 not in users_list:
+                validation_register = checking_for_register(username_input1, password_input1)
+                # validation_register >> A Boolean : True / False
+                if validation_register:
 
-                user = Register(username_input1, password_input1)
-                if user.register():
+                    user = Register(username_input1, password_input1).register()
                     # user registered successfully!
                     # create folder and csv files for user
                     user.creating_folder_for_each_user()
                     user.creating_csvfile_for_each_user()
+                    print(' you have registered successfully :) ')
                     getting_into_messenger(user)
                 else:
-                    pass
+                    logger.info('validation is false .please try again...')
             else:
-                pass
+                logger.warning("this username is not available.try Again...")
 
         elif my_input == '2':
             # Login
             username_input = input('Enter username: ')
             password_input = input('Enter password: ')
             login_user = Login(username_input, password_input)
-            if login_user.login():
-                # user login to messenger successfully!
-                getting_into_messenger(login_user)
+            if not login_user.locking:
+                if login_user.login():
+                    print('you have successfully entered the program :) ')
+                    # user login to messenger successfully!
+                    getting_into_messenger(login_user)
             else:
-                pass
+                logger.warning(f'this account is locked for 1 hour.because user entered '
+                               f'incorrect password for 3 time.')
 
         elif my_input == '3':
 
-            str = input('Are you Sure to Exit from Messenger?(yes/no)\n>>>')
-            if str == 'yes':
+            input4 = input('Are you Sure to Exit from Messenger?(yes/no)\n>>>')
+
+            if input4 == 'yes':
                 break
-            elif str == 'no':
+            elif input4 == 'no':
                 continue
             else:
                 raise ValueError('you should enter yes or no')
@@ -237,4 +256,3 @@ while True:
 
     except Exception as e:
         logger.error('an exception occurred', exc_info=True)
-
