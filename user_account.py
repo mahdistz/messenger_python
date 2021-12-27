@@ -46,6 +46,10 @@ class User:
             information_list = []
         return information_list, users_list, passwords_list
 
+    def quit_from_messenger(self):
+        logger.info(f'{self.username} log out from messenger')
+        print(f'{self.username} log out from messenger')
+
 
 class Register(User):
     def __init__(self, username, password):
@@ -77,7 +81,7 @@ class Register(User):
         items = ['sent.csv', 'draft.csv', 'inbox.csv']
         for item in items:
             with open(f'users\\{self.username}\\{item}', 'a') as file:
-                headers = ['message', 'date-time', 'is_read', 'is_send', 'Sender', 'Receiver']
+                headers = ['message', 'date-time', 'is_read', 'Sender', 'Receiver']
                 writer = csv.DictWriter(file, fieldnames=headers)
                 if file.tell() == 0:
                     writer.writeheader()
@@ -126,28 +130,22 @@ class Login(User):
             logger.error(f'this username:{self.username} not exist!')
             return False
         else:
-            # If the user's account is not locked, it can be entered
-            if not self.locking:
-                for i in range(len(users_list)):
-                    if users_list[i] == self.username:
-                        if password_list[i] == User.hash_method(self.password):
+            for i in range(len(users_list)):
+                if users_list[i] == self.username:
+                    if password_list[i] == User.hash_method(self.password):
+                        logger.info(f'"{self.username}" have successfully entered the program ')
+                        return True
+                    else:
+                        print('the password is not correct.you can try 2 more times.')
+                        if Login.incorrect_password(self):
                             logger.info(f'"{self.username}" have successfully entered the program ')
                             return True
                         else:
-                            print('the password is not correct.you can try 2 more times.')
-                            if Login.incorrect_password(self):
-                                logger.info(f'"{self.username}" have successfully entered the program ')
-                                return True
-                            else:
-                                # if user can't enter true password her/his account must be locked.
-                                Login.locking_account(self)
-                                logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
-                                               f' entered incorrect password for 3 time.')
-                                return False
-            else:
-                logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user entered '
-                               f'incorrect password for 3 time.')
-                return False
+                            # if user can't enter true password her/his account must be locked.
+                            Login.locking_account(self)
+                            logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
+                                           f' entered incorrect password for 3 time.')
+                            return False
 
     def incorrect_password(self):
         """
