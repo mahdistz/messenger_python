@@ -165,4 +165,3 @@ class Sent(Messenger):
     def forward_a_message(self):
         if Messenger.sending_message(self.username):
             logger.info(f'user:{self.username} sent a message to user: {self.username2}')
-
