@@ -126,7 +126,10 @@ class Login(User):
         df = pd.read_csv('users_information.csv')
         index_list = df.index[(df['username'] == self.username)].tolist()
         index = int(index_list[0])
+        # update dataframe
         df.loc[index, 'locking'] = 'True'
+        # writing into the file
+        df.to_csv('users_information.csv', index=False)
         now = datetime.now()
         unlocking_account = now + timedelta(hours=1)
         return unlocking_account
@@ -138,9 +141,9 @@ class Login(User):
         if un_lock_time >= now:
             self.locking = False
             df = pd.read_csv('users_information.csv')
-            # updating the column value/data
             index_list = df.index[(df['username'] == self.username)].tolist()
             index = int(index_list[0])
+            # update dataframe
             df.loc[index, 'locking'] = 'False'
             # writing into the file
             df.to_csv('users_information.csv', index=False)
@@ -150,7 +153,7 @@ class Login(User):
         my_tuple = User.get_info_from_csvfile()
         users_list = my_tuple[1]
         password_list = my_tuple[2]
-        lock_list = my_tuple [3]
+        lock_list = my_tuple[3]
         if self.username not in users_list:
             logger.error(f'this username:{self.username} not exist!')
             return False

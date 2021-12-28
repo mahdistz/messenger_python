@@ -1,3 +1,4 @@
+import working_in_messenger
 from user_account import *
 from logging_module import *
 from working_in_messenger import *
@@ -50,22 +51,24 @@ def getting_into_messenger(user):
                     if item in range(numbers):
                         print(Messenger(user.username).read_message(index=int(item), csvfile_name='inbox.csv'))
                     else:
-                        logger.error('index error!there is no message with this index', exc_info=True)
+                        logger.error('index error!there is no message with this index')
 
-                    input3 = input('1)reply\n2)delete\n3)forward\n>>>')
+                    input3 = input('1)reply\n2)delete\n3)forward\n4)Back to Menu\n>>>')
 
                     if input3 == '1':
 
                         message = input('Enter your message\n>>> ')
                         if checking_len_for_message(message):
-                            user2 = input('Enter username: ')
-                            Inbox(message=message, username=user.username, username2=user2).reply_to_one_message()
+                            df = pd.read_csv(f'users\\{user.username}\\inbox.csv')
+                            user2 = df.at[item, 'Sender']
+                            Messenger(message=message, username=user.username, username2=user2).sending_message()
                         else:
                             logger.warning('this message is too long!')
 
                     elif input3 == '2':
 
-                        Messenger(user).delete_message(index=int(item), csvfile_name='inbox.csv')
+                        delete = Messenger(user.username).delete_message(index=int(item), csvfile_name='inbox.csv')
+                        print(delete)
 
                     elif input3 == '3':
 
@@ -74,9 +77,12 @@ def getting_into_messenger(user):
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
                             message = df.at[item, 'message']
-                            Inbox(message=message, username=user.username, username2=user2).forward_message()
+                            Messenger(message=message, username=user.username, username2=user2).sending_message()
                         else:
                             logger.error('this username not exist!')
+
+                    elif input3 == '4':
+                        continue
                     else:
                         raise ValueError('you should enter 1 or 2 or 3')
 
@@ -98,13 +104,14 @@ def getting_into_messenger(user):
                     if item in range(numbers):
                         print(Messenger(user.username).read_message(index=int(item), csvfile_name='draft.csv'))
                     else:
-                        logger.error('index error!there is no message with this index', exc_info=True)
+                        logger.error('index error!there is no message with this index')
 
-                    input3 = input('1)delete\nr2)sending message\n>>>')
+                    input3 = input('1)delete\nr2)sending message\n3)Back to Menu\n>>>')
 
                     if input3 == '1':
 
-                        Messenger(user).delete_message(index=int(item), csvfile_name='draft.csv')
+                        delete = Messenger(user.username).delete_message(index=int(item), csvfile_name='draft.csv')
+                        print(delete)
 
                     elif input3 == '2':
 
@@ -113,10 +120,12 @@ def getting_into_messenger(user):
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                             message = df.at[item, 'message']
-                            Draft(message=message, username=user.username, username2=user2). \
-                                sent_one_message_from_draft(item)
+                            Messenger(message=message, username=user.username, username2=user2). \
+                                sending_message()
                         else:
                             logger.error('this username not exist')
+                    elif input3 == '3':
+                        continue
                     else:
                         raise ValueError('you should enter 1 or 2')
 
@@ -138,13 +147,14 @@ def getting_into_messenger(user):
                     if item in range(numbers):
                         print(Messenger(user.username).read_message(index=int(item), csvfile_name='sent.csv'))
                     else:
-                        logger.error('index error!there is no message with this index', exc_info=True)
+                        logger.error('index error!there is no message with this index')
 
-                    input3 = input('1)delete\r2)forward\r>>>')
+                    input3 = input('1)delete\r2)forward\r3)Back to Menu\n>>>')
 
                     if input3 == '1':
 
-                        Messenger(user).delete_message(index=int(item), csvfile_name='sent.csv')
+                        delete = Messenger(user.username).delete_message(index=int(item), csvfile_name='sent.csv')
+                        print(delete)
 
                     elif input3 == '2':
 
@@ -153,9 +163,12 @@ def getting_into_messenger(user):
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user.username)
                             message = df.at[int(item), 'message']
-                            Sent(message=message, username=user.username, username2=user2).forward_a_message()
+                            Messenger(message=message, username=user.username, username2=user2).sending_message()
                         else:
                             logger.error('this username not exist!')
+
+                    elif input3 == '3':
+                        continue
                     else:
                         raise ValueError('you should enter 1 or 2 or 3')
 
@@ -255,7 +268,7 @@ while True:
 
         elif my_input == '3':
 
-            input4 = input('Are you Sure to Exit from Messenger?(yes/no)\n>>>')
+            input4 = input('Are you Sure to Exit from Messenger?(yes/no)\n>>>').lower()
 
             if input4 == 'yes':
                 break

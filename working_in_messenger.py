@@ -8,7 +8,7 @@ from datetime import datetime, time
 
 class Messenger:
 
-    def __init__(self, username, username2='', message=''):
+    def __init__(self, username, username2=None, message=None):
         self.username = username
         self.username2 = username2
         self.message = message
@@ -43,9 +43,9 @@ class Messenger:
 
     def number_of_all_messages(self, csvfile_name):
         unread_messages = Messenger.unread_messages(self, csvfile_name)
+        logger.warning(f'the number of unread messages for user :{self.username} is {unread_messages}')
         df = Messenger.loading_data_from_csvfile_to_dataframe(csvfile_name, self.username)
         number_of_rows = len(df.index)
-        logger.warning(f'the number of unread messages for user :{self.username} is {unread_messages}')
         return number_of_rows
 
     def unread_messages(self, csvfile_name):
@@ -71,6 +71,7 @@ class Messenger:
         return message_output
 
     def delete_message(self, csvfile_name, index):
+        # for delete one message from draft if send it
         # with pandas
         df = Messenger.loading_data_from_csvfile_to_dataframe(csvfile_name, self.username)
         df.drop(index=df.index[index],
@@ -78,6 +79,7 @@ class Messenger:
                 inplace=True)
         # updating csv file
         df.to_csv(f'users\\{self.username}\\{csvfile_name}', index=False)
+        return 'one message was deleted'
 
     def update_column_value_of_dataframe(self, file_name, index, column_name, new_value):
 
@@ -122,56 +124,11 @@ class Messenger:
                 validation = True
                 Messenger.saving_info_in_file(self, file_name='sent.csv', username=self.username)
                 Messenger.saving_info_in_file(self, file_name='inbox.csv', username=self.username2)
+                logger.info(f'the user : {self.username} send a message to {self.username2}')
+                print(f'you send a message to {self.username2}')
             else:
                 Messenger.saving_info_in_file(self, file_name='draft.csv', username=self.username)
+                print(f'message saved in draft')
         else:
             logger.warning('this username not exist!!!')
         return validation
-
-
-class Inbox(Messenger):
-
-    def __init__(self, message, username, username2):
-        super().__init__(message, username, username2)
-
-    def reply_to_one_message(self):
-        if Messenger.sending_message(self):
-            logger.info(f'the user : {self.username} reply a message from Inbox')
-
-    def forward_message(self):
-        if Messenger.sending_message(self):
-            logger.info(f'the user : {self.username} forward a message from Inbox to {self.username2}')
-
-
-class Draft(Messenger):
-
-    def __init__(self, message, username, username2='Null'):
-        super().__init__(message, username, username2)
-
-    def sent_one_message_from_draft(self, index):
-        # send message from username1 to username2
-        my_tuple = user_account.User.get_info_from_csvfile()
-        username_list = my_tuple[1]
-
-        if self.username2 in username_list:
-
-            if Messenger.wanting_to_sent_message():
-
-                Messenger.saving_info_in_file(self, file_name='sent.csv', username=self.username)
-                Messenger.saving_info_in_file(self, file_name='inbox.csv', username=self.username2)
-                logger.info(f'the user:{self.username} sent a message from draft to {self.username2}')
-                Messenger.delete_message(self.username, 'draft.csv', index=index)
-            else:
-                pass
-        else:
-            logger.warning('this username not exist!!!')
-
-
-class Sent(Messenger):
-
-    def __init__(self, message, username, username2):
-        super().__init__(message, username, username2)
-
-    def forward_a_message(self):
-        if Messenger.sending_message(self.username):
-            logger.info(f'user:{self.username} sent a message to user: {self.username2}')
