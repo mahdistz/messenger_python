@@ -1,6 +1,8 @@
+import csv
+import os.path
 import pandas as pd
 from logging_module import *
-from user_account import *
+import user_account
 from datetime import datetime, time
 
 
@@ -26,10 +28,18 @@ class Messenger:
 
     @staticmethod
     def loading_data_from_csvfile_to_dataframe(file_name, username):
-        with open(f'users\\{username}\\{file_name}', mode='r') as file:
-            reader = csv.DictReader(file)
-            df = pd.DataFrame(reader)
-        return df
+        if os.path.exists(f'users\\{username}\\{file_name}'):
+            with open(f'users\\{username}\\{file_name}', mode='r') as file:
+                reader = csv.DictReader(file)
+                df = pd.DataFrame(reader)
+            return df
+        else:
+            with open(f'users\\{username}\\{file_name}', 'a') as file:
+                headers = ['message', 'date-time', 'is_send', 'Sender', 'Receiver']
+                writer = csv.DictWriter(file, fieldnames=headers)
+                if file.tell() == 0:
+                    writer.writeheader()
+            return writer
 
     def number_of_all_messages(self, csvfile_name):
         unread_messages = Messenger.unread_messages(self, csvfile_name)
@@ -103,7 +113,7 @@ class Messenger:
 
     def sending_message(self):
         # send message from username1 to username2
-        my_tuple = User.get_info_from_csvfile()
+        my_tuple = user_account.User.get_info_from_csvfile()
         username_list = my_tuple[1]
         validation = False
         if self.username2 in username_list:
@@ -121,8 +131,8 @@ class Messenger:
 
 class Inbox(Messenger):
 
-    def __init__(self, message, username1, username2):
-        super().__init__(message, username1, username2)
+    def __init__(self, message, username, username2):
+        super().__init__(message, username, username2)
 
     def reply_to_one_message(self):
         if Messenger.sending_message(self):
@@ -135,12 +145,12 @@ class Inbox(Messenger):
 
 class Draft(Messenger):
 
-    def __init__(self, message, username1, username2='Null'):
-        super().__init__(message, username1, username2)
+    def __init__(self, message, username, username2='Null'):
+        super().__init__(message, username, username2)
 
     def sent_one_message_from_draft(self, index):
         # send message from username1 to username2
-        my_tuple = User.get_info_from_csvfile()
+        my_tuple = user_account.User.get_info_from_csvfile()
         username_list = my_tuple[1]
 
         if self.username2 in username_list:
@@ -159,8 +169,8 @@ class Draft(Messenger):
 
 class Sent(Messenger):
 
-    def __init__(self, message, username1, username2):
-        super().__init__(message, username1, username2)
+    def __init__(self, message, username, username2):
+        super().__init__(message, username, username2)
 
     def forward_a_message(self):
         if Messenger.sending_message(self.username):
