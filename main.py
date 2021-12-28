@@ -58,9 +58,8 @@ def getting_into_messenger(user):
 
                         message = input('Enter your message\n>>> ')
                         if checking_len_for_message(message):
-                            df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
-                            sender = df.at[int(item), 'Sender']
-                            Inbox(message=message, username1=user.username, username2=sender).reply_to_one_message()
+                            user2 = input('Enter username: ')
+                            Inbox(message=message, username=user.username, username2=user2).reply_to_one_message()
                         else:
                             logger.warning('this message is too long!')
 
@@ -74,8 +73,8 @@ def getting_into_messenger(user):
                         user2 = input('Enter username of whom you want forward message\n>>>')
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
-                            message = df.at[int(item), 'message']
-                            Inbox(message=message, username1=user.username, username2=user2).forward_message()
+                            message = df.at[item, 'message']
+                            Inbox(message=message, username=user.username, username2=user2).forward_message()
                         else:
                             logger.error('this username not exist!')
                     else:
@@ -114,7 +113,7 @@ def getting_into_messenger(user):
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                             message = df.at[item, 'message']
-                            Draft(message=message, username1=user.username, username2=user2). \
+                            Draft(message=message, username=user.username, username2=user2). \
                                 sent_one_message_from_draft(item)
                         else:
                             logger.error('this username not exist')
@@ -154,7 +153,7 @@ def getting_into_messenger(user):
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('sent.csv', user.username)
                             message = df.at[int(item), 'message']
-                            Sent(message=message, username1=user.username, username2=user2).forward_a_message()
+                            Sent(message=message, username=user.username, username2=user2).forward_a_message()
                         else:
                             logger.error('this username not exist!')
                     else:
@@ -230,13 +229,14 @@ while True:
                 # validation_register >> A Boolean : True / False
                 if validation_register:
 
-                    user = Register(username_input1, password_input1).register()
+                    register = Register(username_input1, password_input1)
+                    user1 = Register(username_input1, password_input1).register()
                     # user registered successfully!
                     # create folder and csv files for user
-                    user.creating_folder_for_each_user()
-                    user.creating_csvfile_for_each_user()
+                    register.creating_folder_for_each_user()
+                    register.creating_csvfile_for_each_user()
                     print(' you have registered successfully :) ')
-                    getting_into_messenger(user)
+                    getting_into_messenger(register)
                 else:
                     logger.info('validation is false .please try again...')
             else:
