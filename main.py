@@ -158,7 +158,7 @@ def getting_into_messenger(user):
                     logger.error('this username not exist!')
 
             elif input1 == '5':
-                User.quit_from_messenger(user.username)
+                User.quit_from_messenger(user)
                 break
             else:
                 raise ValueError('you should enter a number between 1 to 5!!')
@@ -223,14 +223,11 @@ while True:
             username_input = input('Enter username: ')
             password_input = input('Enter password: ')
             login_user = Login(username_input, password_input)
-            if not login_user.locking:
-                if login_user.login():
-                    print('you have successfully entered the program :) ')
-                    # user login to messenger successfully!
-                    getting_into_messenger(login_user)
-            else:
-                logger.warning(f'this account is locked for 1 hour.because user entered '
-                               f'incorrect password for 3 time.')
+
+            if login_user.login():
+                print('you have successfully entered the program :) ')
+                # user login to messenger successfully!
+                getting_into_messenger(login_user)
 
         elif my_input == '3':
 
