@@ -31,11 +31,12 @@ def getting_into_messenger(user):
         try:
             input1 = input('1)Inbox\n2)Draft\n3)Sent\n4)Create New Message\n5)Log Out\n>>>')
             if input1 == '1':
+                logger.warning(f'Number of all Messages:{Messenger.number_of_all_messages(user, "inbox.csv")}')
                 menu_into_files()
                 input2 = input('>>>')
 
                 if input2 == '1':
-                    Messenger.number_of_all_messages(user, 'inbox.csv')
+
                     all_messages = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
                     print(all_messages)
 
@@ -54,15 +55,21 @@ def getting_into_messenger(user):
                     input3 = input('1)reply\n2)delete\n3)forward\n>>>')
 
                     if input3 == '1':
+
                         message = input('Enter your message\n>>> ')
-                        df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
-                        sender = df.at[int(item), 'Sender']
-                        Inbox(message=message, username1=user.username, username2=sender).reply_to_one_message()
+                        if checking_len_for_message(message):
+                            df = Messenger.loading_data_from_csvfile_to_dataframe('inbox.csv', user.username)
+                            sender = df.at[int(item), 'Sender']
+                            Inbox(message=message, username1=user.username, username2=sender).reply_to_one_message()
+                        else:
+                            logger.warning('this message is too long!')
 
                     elif input3 == '2':
+
                         Messenger(user).delete_message(index=int(item), csvfile_name='inbox.csv')
 
                     elif input3 == '3':
+
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message\n>>>')
                         if user2 in users_list:
@@ -75,7 +82,7 @@ def getting_into_messenger(user):
                         raise ValueError('you should enter 1 or 2 or 3')
 
             elif input1 == '2':
-
+                logger.warning(f'Number of all Messages:{Messenger.number_of_all_messages(user, "draft.csv")}')
                 menu_into_files()
                 input2 = input('>>>')
 
@@ -97,9 +104,11 @@ def getting_into_messenger(user):
                     input3 = input('1)delete\nr2)sending message\n>>>')
 
                     if input3 == '1':
+
                         Messenger(user).delete_message(index=int(item), csvfile_name='draft.csv')
 
                     elif input3 == '2':
+
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message:')
                         if user2 in users_list:
@@ -113,6 +122,8 @@ def getting_into_messenger(user):
                         raise ValueError('you should enter 1 or 2')
 
             elif input1 == '3':
+
+                logger.warning(f'Number of all Messages:{Messenger.number_of_all_messages(user, "sent.csv")}')
                 menu_into_files()
                 input2 = input('>>>')
 
@@ -133,9 +144,11 @@ def getting_into_messenger(user):
                     input3 = input('1)delete\r2)forward\r>>>')
 
                     if input3 == '1':
+
                         Messenger(user).delete_message(index=int(item), csvfile_name='sent.csv')
 
                     elif input3 == '2':
+
                         print(users_list)
                         user2 = input('Enter username of whom you want forward message\n>>>')
                         if user2 in users_list:
@@ -153,7 +166,10 @@ def getting_into_messenger(user):
                 user2 = input('Enter username of whom you want to send message\n>>>')
                 if user2 in users_list:
                     message = input('Enter your message:')
-                    Messenger(username=user.username, username2=user2, message=message).sending_message()
+                    if checking_len_for_message(message):
+                        Messenger(username=user.username, username2=user2, message=message).sending_message()
+                    else:
+                        logger.warning('this message is too long!')
                 else:
                     logger.error('this username not exist!')
 
@@ -169,10 +185,10 @@ def getting_into_messenger(user):
         except (NameError, IOError, FileNotFoundError):
             logger.error('an exception occurred', exc_info=True)
 
-        except (FileExistsError, ModuleNotFoundError) :
+        except (FileExistsError, ModuleNotFoundError):
             logger.error('an exception occurred', exc_info=True)
 
-        except Exception :
+        except Exception:
             logger.error('an exception occurred', exc_info=True)
 
 
@@ -183,6 +199,14 @@ def menu_into_files():
 
 my_tuple = User.get_info_from_csvfile()
 users_list = my_tuple[1]
+lock_list = my_tuple[3]
+
+
+def checking_len_for_message(msg):
+    if len(msg) < 30:
+        return True
+    return False
+
 
 """
 Menu
