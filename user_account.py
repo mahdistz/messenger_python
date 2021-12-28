@@ -1,3 +1,5 @@
+import pandas as pd
+from working_in_messenger import *
 from logging_module import *
 import os
 from hashlib import sha3_256
@@ -54,6 +56,7 @@ class User:
 class Register(User):
     def __init__(self, username, password):
         super(Register, self).__init__(username, password)
+        self.locking = False
 
     def validation_password(self):
         # Password must be 6 to 12 characters, 1 lowercase letter
@@ -88,7 +91,7 @@ class Register(User):
 
     def writing_in_file(self):
         # for each user ,username and password must be saved in file
-        info = {'username': self.username, 'password': User.hash_method(self.password)}
+        info = {'username': self.username, 'password': User.hash_method(self.password), 'locking': self.locking}
         File('users_information.csv').write(info)
 
     def register(self):
@@ -107,6 +110,7 @@ class Register(User):
 
 
 class Login(User):
+
     def __init__(self, username, password):
         super(Login, self).__init__(username, password)
         self.locking = False
@@ -117,9 +121,27 @@ class Login(User):
         self.locking = True
         now = datetime.now()
         unlocking_account = now + timedelta(hours=1)
-        if datetime.now() >= unlocking_account:
+        return unlocking_account
+
+    def unlock_account(self, index):
+        un_lock_time = Login.locking_account(self)
+        now = datetime.now()
+        if un_lock_time >= now:
             self.locking = False
-        return self.locking
+            df = pd.read_csv('users_information.csv')
+            # updating the column value/data
+            df.loc[index, 'locking'] = 'False'
+            # writing into the file
+            df.to_csv('users_information.csv', index=False)
+
+    @staticmethod
+    def check_locking(index):
+        if os.path.exists('users_information.csv'):
+            with open('users_information.csv', 'r') as file:
+                reader = csv.DictReader(file)
+                df = pd.DataFrame(reader)
+                locking = df.at[index, 'locking']
+        return locking
 
     def login(self):
 
@@ -130,22 +152,23 @@ class Login(User):
             logger.error(f'this username:{self.username} not exist!')
             return False
         else:
-            for i in range(len(users_list)):
-                if users_list[i] == self.username:
-                    if password_list[i] == User.hash_method(self.password):
-                        logger.info(f'"{self.username}" have successfully entered the program ')
-                        return True
-                    else:
-                        print('the password is not correct.you can try 2 more times.')
-                        if Login.incorrect_password(self):
+            if not self.locking:
+                for i in range(len(users_list)):
+                    if users_list[i] == self.username:
+                        if password_list[i] == User.hash_method(self.password):
                             logger.info(f'"{self.username}" have successfully entered the program ')
                             return True
                         else:
-                            # if user can't enter true password her/his account must be locked.
-                            Login.locking_account(self)
-                            logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
-                                           f' entered incorrect password for 3 time.')
-                            return False
+                            print('the password is not correct.you can try 2 more times.')
+                            if Login.incorrect_password(self):
+                                logger.info(f'"{self.username}" have successfully entered the program ')
+                                return True
+                            else:
+                                # if user can't enter true password her/his account must be locked.
+                                Login.locking_account(self)
+                                logger.warning(f'this account :"{self.username}" is locked for 1 hour.because user'
+                                               f' entered incorrect password for 3 time.')
+                                return False
 
     def incorrect_password(self):
         """
