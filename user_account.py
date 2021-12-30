@@ -169,7 +169,7 @@ class Login(User):
                             logger.warning('your account is locked')
                     else:
                         print('the password is not correct.you can try 2 more times.')
-                        if Login.incorrect_password(self):
+                        if Login.incorrect_password(self) and lock_list[i] == 'False':
                             logger.info(f'"{self.username}" have successfully entered the program ')
                             return True
                         else:
