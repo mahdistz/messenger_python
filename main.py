@@ -116,12 +116,14 @@ def getting_into_messenger(user):
                     elif input3 == '2':
 
                         print(users_list)
-                        user2 = input('Enter username of whom you want forward message:')
+                        user2 = input('Enter username of whom you want send message:')
                         if user2 in users_list:
                             df = Messenger.loading_data_from_csvfile_to_dataframe('draft.csv', user.username)
                             message = df.at[item, 'message']
-                            Messenger(message=message, username=user.username, username2=user2). \
-                                sending_message()
+                            # send message from draft
+                            Messenger(message=message, username=user.username, username2=user2).sending_message()
+                            # deleting sent message from draft
+                            Messenger(username=user.username).delete_message('draft.csv', item)
                         else:
                             logger.error('this username not exist')
                     elif input3 == '3':
