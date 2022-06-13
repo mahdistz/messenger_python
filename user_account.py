@@ -1,6 +1,4 @@
-import pandas as pd
 from working_in_messenger import *
-from logging_module import *
 import os
 from hashlib import sha3_256
 from re import compile
